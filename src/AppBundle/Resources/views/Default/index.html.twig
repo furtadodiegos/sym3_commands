@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div ng-app="app">
+
+        <div ng-controller="myCtrl">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Email</th>
+                </tr>
+                </thead>
+                <tbody >
+                <tr ng-repeat="e in emails">
+                    <td>{[{ e.id }]}</td>
+                    <td>{[{ e.nome }]}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+
+    <script type="text/javascript">
+        angular.module('app', [])
+                .config(function ($interpolateProvider) {
+                    $interpolateProvider.startSymbol('{[{');
+                    $interpolateProvider.endSymbol('}]}');
+                })
+                .controller('myCtrl', function ($scope, $log, $http, $timeout) {
+                    $scope.getEmails = function () {
+                        $http({
+                            method: 'GET',
+                            url: '/email',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        })
+                                .then(function (resp) {
+                                    $scope.emails = resp.data;
+                                })
+                                .catch(function (err) {
+                                    $log.debug('error: ', err);
+                                })
+                    }
+
+                    $scope.refresh = function () {
+                        $timeout(function () {
+                            $scope.$apply(function () {
+                                $scope.emails = $scope.getEmails();
+                                $scope.refresh();
+                            });
+                        },1000);
+                    }
+
+                    $scope.refresh();
+                });
+    </script>
+{% endblock %}
